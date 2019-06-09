@@ -1,0 +1,9 @@
+debugMessage() {
+	if test "$1"; then
+		if test $debug; then
+			echo "$1"
+		fi
+	else
+		echo 'ERROR (internal): debugMessage called but no argument supplied!'
+	fi
+}

@@ -1,0 +1,12 @@
+#!/bin/sh
+
+. ../../debugMessage
+
+debugMessage "I see $# argument(s)"
+
+count=0
+until test $# = 0; do
+	i=$((i+1))
+	echo "Argument $i: $1"
+	shift
+done

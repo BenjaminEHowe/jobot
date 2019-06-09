@@ -1,0 +1,88 @@
+#!/bin/sh
+
+print() {
+	printf %s\\n "$1"
+}
+
+debugMessage() {
+	if test "$1"; then
+		if test $debug; then
+			print "$1"
+		fi
+	else
+		print 'ERROR (internal): debugMessage called but no argument supplied!'
+	fi
+}
+
+# check if we've been passed the --debug argument
+if test $1 && test $1 = '--debug'; then
+	debug=1
+	print 'Debugging mode...'
+	shift
+fi
+
+# if we have no arguments, print help
+if test $# = 0; then
+	print "Usage: $0 MODULE [ARGUMENT...]"
+	exit 0
+fi
+
+# the argument is the module name
+moduleName=$1
+shift
+debugMessage "Required module: $moduleName"
+
+# we must have an argument... so we need to discover modules!
+modules=''
+if test -e 'modules'; then
+	debugMessage 'A modules directory exists'
+	modules=$modules$(find modules/* -maxdepth 0 -type d)
+else
+	debugMessage 'No modules directory exists'
+fi
+if test -e "$HOME/.jobot/modules"; then
+	debugMessage 'A modules directory (within ~/.jobot) exists'
+	modules=$modules$(find $HOME/.jobot/modules/* -maxdepth 0 -type d)
+else
+	debugMessage 'No modules directory (within ~/.jobot) exists'
+fi
+if test -n "$JOBOT_MODULES"; then
+	debugMessage 'An environment variable exists'
+	print 'TODO: parse $JOBOT_MODULES environment variable'
+	# the below parses the path environment variable - will be useful later
+	#for directory in $(echo $PATH | sed -e 's/:/ /g'); do
+	#	print $directory
+	#done
+else
+	debugMessage 'No environment variable exists'
+fi
+
+# if we're in debug mode, print a list of the discovered modules
+if test $debug; then
+	print 'Modules available:'
+	for directory in $modules; do
+		print "  $directory"
+	done
+fi
+
+# find the requested module
+for module in $modules; do
+	thisModuleName=$(echo $module | grep -e '[^\/]*$' -o)
+	if test $thisModuleName = $moduleName; then
+		# validate that a default file actually exists...
+		if test -e "$module/default"; then
+			# execute!
+			debugMessage "Executing $module/default"
+			cd $module
+			. "./default"
+			exit 0
+		else
+			print "ERROR: $module/default does not exist!"
+			exit 2
+		fi
+	fi
+done
+
+# if we get this far then we never found a matching module...
+print "ERROR: module $moduleName not found!"
+exit 1

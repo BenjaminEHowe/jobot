@@ -1,0 +1,8 @@
+#/bin/sh
+
+# set the directory below to the jobot installation directory
+# note: use $HOME instead of ~
+JOBOT_DIR="/path/to/jobot/directory"
+
+cd "$JOBOT_DIR"
+. "$JOBOT_DIR/jobot"

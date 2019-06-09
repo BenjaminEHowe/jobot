@@ -1,0 +1,66 @@
+#!/bin/sh
+
+. ../../debugMessage
+
+findUrl() {
+	if test $# -lt 1; then
+		echo 'ERROR (internal): findUrl requires term argument'
+		return 1
+	fi
+	if test $debug; then
+		eval termForDebug=$1
+		debugMessage "Term: $termForDebug:"
+	fi
+	for file in $files; do
+		debugMessage "  Searching $file"
+		url=$(cat "$file" | sed -rn "s/^$1\t+([^\t]+)$/\1/p")
+		if test -n "$url"; then
+			debugMessage '  Found!'
+			break
+		fi
+	done
+}
+
+# set the term and shift so it's no longer an arg
+term=$1
+shift
+
+# find the files where we might find a term
+# TODO: what if $HOME/.jobot/go doesn't exist?
+# TODO: create an installer module?
+files=$(find "$HOME/.jobot/go" -type f)
+
+if test $# -eq 0; then
+	findUrl "$term"
+else
+	findUrl "${term}\($#\)"
+	if test -z "$url"; then
+		findUrl "${term}\(n\)"
+	fi
+	if test -z "$url"; then
+		findUrl "$term"
+	fi
+	# evaluate the url to fill the args
+	eval url="$url"
+fi
+
+# if a URL was found...
+if test -n "$url"; then
+	# open it using an appropriate command
+	if command -v xdg-open > /dev/null; then
+		debugMessage "Opening $url using xdg-open"
+		xdg-open \'"$url"\'
+	elif command -v powershell.exe > /dev/null; then
+		debugMessage "Opening $url using powershell.exe"
+		powershell.exe Start \'"$url"\'
+	elif command -v open > /dev/null; then
+		# n.b. open exists on linux, but doesn't do what we want it to...
+		# on mac it works as we'd like
+		debugMessage "Opening $url using open"
+		open \'"$url"\'
+	else
+		echo 'ERROR: no supported browser handler found!'
+	fi
+else
+	echo 'ERROR: no URL found!'
+fi
