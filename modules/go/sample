@@ -1,0 +1,6 @@
+as		https://www.bh96.uk/AS.pdf
+cv		https://www.bh96.uk/CV.pdf
+google		https://www.google.com/
+google(n)	https://www.google.com/search?q=${*}
+google(2)	https://www.google.com/search?q=${2}\&tbm=${1}
+localhost	http://localhost/
